@@ -1,6 +1,7 @@
 import Order from "../model/Order.model.js"
 
 
+
 export const createOrder = async (req, res) => {
   try {
     const {
@@ -59,5 +60,46 @@ export const getAllOrders = async (req, res) => {
 
 
 
+
+
+export const updateOrder = async (req, res) => {
+  try {
+    const { email, _id, ...updateData } = req.body; // Exclude _id
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required to update an order",
+      });
+    }
+
+   
+
+    const order = await Order.findOneAndUpdate(
+      { email },          // filter by email
+      { $set: updateData }, 
+      { new: true }
+    );
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found with this email",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Order updated successfully",
+      data: order,
+    });
+  } catch (error) {
+    console.error("Error updating order:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update order",
+    });
+  }
+};
 
 
