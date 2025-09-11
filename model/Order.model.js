@@ -1,23 +1,15 @@
+
+
 import mongoose from "mongoose";
+
+const STATUS_ENUM = ["pending", "processing", "completed", "cancelled"];
 
 const orderSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      lowercase: true,
-      trim: true,
-    },
-    phone: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, lowercase: true, trim: true },
+    phone: { type: String, required: true, trim: true },
+
     productType: {
       type: String,
       required: true,
@@ -38,6 +30,8 @@ const orderSchema = new mongoose.Schema(
         "Austin Jacket",
       ],
     },
+        orderId: { type: String, required: true, unique: true },
+
     brand: {
       type: String,
       enum: [
@@ -56,36 +50,25 @@ const orderSchema = new mongoose.Schema(
         "Oblique",
       ],
     },
-    size: {
-      type: String,
-      enum: ["XS", "Small", "Medium", "Large", "XL", "XXL", "3XL"],
-    },
-    colour: {
-      type: String,
-      enum: [
-        "Black",
-        "Navy Blue",
-        "Maroon",
-        "White",
-        "Grey Melange",
-        "Dark Grey",
-        "Petrol",
-      ],
-    },
-    address: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    comments: {
-      type: String,
-      trim: true,
-    },
-    status: {
-      type: String,
-      enum: ["pending", "processing", "completed", "cancelled"],
-      default: "pending",
-    },
+
+    size: { type: String, enum: ["XS", "Small", "Medium", "Large", "XL", "XXL", "3XL"] },
+    colour: { type: String, enum: ["Black", "Navy Blue", "Maroon", "White", "Grey Melange", "Dark Grey", "Petrol"] },
+
+    address: { type: String, required: true, trim: true },
+    comments: { type: String, trim: true },
+
+    // Current status
+    status: { type: String, enum: STATUS_ENUM, default: "pending" },
+
+    // Full history of status changes
+    history: [
+      {
+        status: { type: String, enum: STATUS_ENUM },
+        changedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" },
+        changedByEmail: { type: String }, // optional quick lookup
+        changedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );
