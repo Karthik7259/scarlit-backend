@@ -1,5 +1,9 @@
+import dotenv from "dotenv";
+dotenv.config(); 
 import { v4 as uuidv4 } from "uuid";
 import Order from "../model/Order.model.js";
+import sendEmail from "../Service/sendEmail.js";
+import OrderCreateEmailTemplate from "../utils/OrderCreateEmailTemplate.js";
 
 
 
@@ -11,7 +15,12 @@ function generateOrderId() {
   return `ORD-${ymd}-${rand}`;
 }
 
+
+
+
+
 export const createOrder = async (req, res) => {
+  
   try {
     const {
       name,
@@ -44,9 +53,30 @@ export const createOrder = async (req, res) => {
 
     await order.save();
 
+    // Prepare email HTML using the template
+    // const emailHtml = OrderCreateEmailTemplate({
+    //   name,
+    //   email,
+    //   phone,
+    //   productType,
+    //   brand,
+    //   size,
+    //   colour,
+    //   address,
+    //   orderId,
+    //   orderDate: new Date().toLocaleDateString()
+    // });
+
+    // // Send confirmation email
+    // await sendEmail({
+    //   sendTo: email,
+    //   subject: `Order Confirmation - ${orderId}`,
+    //   html: emailHtml
+    // });
+
     res.status(201).json({
       success: true,
-      message: "Order saved successfully!",
+      message: "Order saved successfully and confirmation email sent!",
       data: order,
     });
   } catch (error) {

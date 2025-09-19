@@ -1,7 +1,9 @@
-import dotenv from 'dotenv';
-dotenv.config();
 import express from 'express'
 import cors from 'cors'
+import dotenv from 'dotenv';
+dotenv.config();
+
+
 import cookieParser from 'cookie-parser';
 import OrderRouter from './routes/Order.routes.js';
 import UserRouter from './routes/User.routes.js';
