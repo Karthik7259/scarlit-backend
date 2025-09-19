@@ -54,25 +54,25 @@ export const createOrder = async (req, res) => {
     await order.save();
 
     // Prepare email HTML using the template
-    // const emailHtml = OrderCreateEmailTemplate({
-    //   name,
-    //   email,
-    //   phone,
-    //   productType,
-    //   brand,
-    //   size,
-    //   colour,
-    //   address,
-    //   orderId,
-    //   orderDate: new Date().toLocaleDateString()
-    // });
+    const emailHtml = OrderCreateEmailTemplate({
+      name,
+      email,
+      phone,
+      productType,
+      brand,
+      size,
+      colour,
+      address,
+      orderId,
+      orderDate: new Date().toLocaleDateString()
+    });
 
-    // // Send confirmation email
-    // await sendEmail({
-    //   sendTo: email,
-    //   subject: `Order Confirmation - ${orderId}`,
-    //   html: emailHtml
-    // });
+    // Send confirmation email
+    await sendEmail({
+      sendTo: email,
+      subject: `Order Confirmation - ${orderId}`,
+      html: emailHtml
+    });
 
     res.status(201).json({
       success: true,
