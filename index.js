@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser';
 import OrderRouter from './routes/Order.routes.js';
 import UserRouter from './routes/User.routes.js';
 import connectDB from './db/Connectdb.js';
+import ProductRouter from './routes/Product.routes.js';
 
 const app = express();
 app.use(express.json())
@@ -15,6 +16,7 @@ app.use(cors())
 app.use(cookieParser())
 app.use('/api/order',OrderRouter)
 app.use('/api/user',UserRouter)
+app.use('/api/products',ProductRouter)
 
 const PORT=5000;
 
