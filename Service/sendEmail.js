@@ -3,8 +3,8 @@ dotenv.config();
 import nodemailer from "nodemailer";
 
 // You can set these in your .env file for security
-const GMAIL_USER = process.env.GMAIL_USER || 'Abhishek@gifts4corp.com';
-const GMAIL_PASS = process.env.GMAIL_PASS || 'taik daqc qjeo omft';
+const GMAIL_USER = process.env.GMAIL_USER 
+const GMAIL_PASS = process.env.GMAIL_PASS
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
