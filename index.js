@@ -12,7 +12,15 @@ import ProductRouter from './routes/Product.routes.js';
 
 const app = express();
 app.use(express.json())
-app.use(cors())
+const corsOptions = {
+  origin: '*', // Allow all origins
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-access-token'],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 app.use(cookieParser())
 app.use('/api/order',OrderRouter)
 app.use('/api/user',UserRouter)
