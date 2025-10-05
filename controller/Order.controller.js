@@ -206,71 +206,75 @@ export const updatestatus = async (req, res) => {
     });
   }
 };
+
+
 export const updateOrder = async (req, res) => {
   try {
-    const { email, _id, ...updateData } = req.body; // Exclude _id
-
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: "Email is required to update an order",
-      });
-    }
+    const {  orderId, ...updateData } = req.body; // Exclude _id
+    console.log("Order ID:", orderId);
+    console.log("Update Data Received:", updateData); // Add this line
+    
 
     // Find the existing order first
-    const existingOrder = await Order.findOne({ email });
+    const existingOrder = await Order.findOne({ orderId });
+    console.log("Existing Order:", existingOrder); // Add this line
     if (!existingOrder) {
       return res.status(404).json({
         success: false,
-        message: "Order not found with this email",
+        message: "Order not found with this orderId",
       });
     }
 
     // Define allowed fields to update (security measure)
-    const allowedFields = ['name', 'phone', 'address', 'comments', 'selectedSize', 'selectedColour', 'status'];
+    const allowedFields = [
+      "name",
+      "phone",
+      "address",
+      "comments",
+      "selectedSize",
+      "selectedColour",
+      "status",
+    ];
     const filteredUpdateData = {};
-    
-    // Only allow updating specific fields
-    for (const field of allowedFields) {
-      if (updateData[field] !== undefined) {
-        filteredUpdateData[field] = updateData[field];
+
+    // Validate against product options
+    const productDoc = await Product.findOne({
+      brand: existingOrder.productBrand,
+    });
+
+    console.log("Product Document:", productDoc); // Add this line
+    if (!productDoc) {
+      return res.status(400).json({
+        success: false,
+        message: "Product not found for validation",
+      });
+    }
+
+    // Filter only allowed fields
+    for (const key of Object.keys(updateData)) {
+      if (allowedFields.includes(key)) {
+        filteredUpdateData[key] = updateData[key];
       }
     }
 
-    // Validate status if being updated
-    
-    // If size or color is being updated, validate against the product
-    if (filteredUpdateData.selectedSize || filteredUpdateData.selectedColour) {
-      // Find the product using productName (since we store name, not ObjectId)
-      const productDoc = await Product.findOne({ name: existingOrder.productName });
-      
-      if (!productDoc) {
-        return res.status(400).json({
-          success: false,
-          message: "Product not found for validation"
-        });
-      }
+    console.log("Filtered Update Data:", filteredUpdateData); // Add this line
 
-      // Validate size if being updated
-      if (filteredUpdateData.selectedSize && !productDoc.sizes.includes(filteredUpdateData.selectedSize)) {
-        return res.status(400).json({
-          success: false,
-          message: `Size "${filteredUpdateData.selectedSize}" is not available for this product. Available sizes: ${productDoc.sizes.join(', ')}`
-        });
-      }
-
-      // Validate color if being updated
-      if (filteredUpdateData.selectedColour && !productDoc.colours.includes(filteredUpdateData.selectedColour)) {
-        return res.status(400).json({
-          success: false,
-          message: `Color "${filteredUpdateData.selectedColour}" is not available for this product. Available colors: ${productDoc.colours.join(', ')}`
-        });
-      }
+    // Validate color if being updated
+    if (
+      filteredUpdateData.selectedColour &&
+      !productDoc.colours.includes(filteredUpdateData.selectedColour)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: `Color "${filteredUpdateData.selectedColour}" is not available for this product. Available colors: ${productDoc.colours.join(", ")}`,
+      });
     }
+
+
 
     // Update the order with validated data
     const order = await Order.findOneAndUpdate(
-      { email },
+      { orderId },
       { $set: filteredUpdateData },
       { new: true, runValidators: true }
     );
@@ -280,7 +284,7 @@ export const updateOrder = async (req, res) => {
       order.history.push({
         status: filteredUpdateData.status,
         changedBy: null, // No user context in this endpoint
-        changedByEmail: "system", // Mark as system update
+        changedByEmail: "system",
         changedAt: new Date(),
       });
       await order.save();
@@ -291,16 +295,16 @@ export const updateOrder = async (req, res) => {
       message: "Order updated successfully",
       data: order,
     });
-
   } catch (err) {
     console.error("Error updating order status:", err);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       message: "Failed to update order status",
-      error: err.message 
+      error: err.message,
     });
   }
 };
+
 
 
 
