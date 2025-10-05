@@ -9,6 +9,7 @@ import OrderCreateEmailTemplate from "../utils/OrderCreateEmailTemplate.js";
 
 
 
+
 function generateOrderId() {
   // Example: ORD-20250911-12345
   const date = new Date();
@@ -133,67 +134,56 @@ export const getAllOrders = async (req, res) => {
 };
 
 
+// ...existing code...
 export const updatestatus = async (req, res) => {
   try {
- 
     const { orderId, status } = req.body;
-   
 
-    // Validate required fields
-    if (!orderId || !status) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "OrderId and status are required" 
-      });
-    }
-
-    // Validate status
-    const validStatuses = ["pending", "processing", "completed", "cancelled"];
-    if (!validStatuses.includes(status)) {
+    // Basic validation: require orderId and a non-empty status value from frontend
+    if (!orderId || status === undefined || String(status).trim() === "") {
       return res.status(400).json({
         success: false,
-        message: `Invalid status. Valid statuses are: ${validStatuses.join(', ')}`
+        message: "OrderId and status are required"
       });
     }
 
-    
-
-    // Check authentication
+    // Check authentication (keep if route protected)
     if (!req.user || !req.user._id) {
-      return res.status(401).json({ 
-        success: false, 
-        message: "Authentication required" 
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required"
       });
     }
 
     const employeeId = req.user._id;
     const employeeEmail = req.user.email;
-    console.log("Employee ID:", employeeId, "Email:", employeeEmail);
 
     // Find the order by custom orderId
     const order = await Order.findOne({ orderId });
-    console.log("Found order:", order);
     if (!order) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Order not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
       });
     }
 
-    // Check if status is actually changing
-    if (order.status === status) {
+    const newStatus = String(status).trim();
+
+    // If status unchanged, inform caller
+    if (order.status === newStatus) {
       return res.status(400).json({
         success: false,
-        message: `Order is already in ${status} status`
+        message: `Order is already in '${newStatus}' status`
       });
     }
 
-    // Update current status
-    order.status = status;
+    // Update status directly from frontend (no predefined validation)
+    order.status = newStatus;
 
-    // Always add a NEW history entry (don't update existing ones)
+    // Append history entry
+    if (!Array.isArray(order.history)) order.history = [];
     order.history.push({
-      status,
+      status: newStatus,
       changedBy: employeeId,
       changedByEmail: employeeEmail,
       changedAt: new Date(),
@@ -201,23 +191,21 @@ export const updatestatus = async (req, res) => {
 
     await order.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Order status updated successfully",
-      data: order,
+      data: order
     });
 
   } catch (err) {
     console.error("Error updating order status:", err);
-    res.status(500).json({ 
-      success: false, 
+    return res.status(500).json({
+      success: false,
       message: "Failed to update order status",
-      error: err.message 
+      error: err.message
     });
   }
 };
-
-
 export const updateOrder = async (req, res) => {
   try {
     const { email, _id, ...updateData } = req.body; // Exclude _id
@@ -250,16 +238,7 @@ export const updateOrder = async (req, res) => {
     }
 
     // Validate status if being updated
-    if (filteredUpdateData.status) {
-      const validStatuses = ["pending", "processing", "completed", "cancelled"];
-      if (!validStatuses.includes(filteredUpdateData.status)) {
-        return res.status(400).json({
-          success: false,
-          message: `Invalid status. Valid statuses are: ${validStatuses.join(', ')}`
-        });
-      }
-    }
-
+    
     // If size or color is being updated, validate against the product
     if (filteredUpdateData.selectedSize || filteredUpdateData.selectedColour) {
       // Find the product using productName (since we store name, not ObjectId)
@@ -313,25 +292,16 @@ export const updateOrder = async (req, res) => {
       data: order,
     });
 
-  } catch (error) {
-    console.error("Error updating order:", error);
-    
-    // Handle specific MongoDB validation errors
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({
-        success: false,
-        message: "Validation error",
-        details: Object.values(error.errors).map(err => err.message)
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to update order",
-      error: error.message
+  } catch (err) {
+    console.error("Error updating order status:", err);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to update order status",
+      error: err.message 
     });
   }
 };
+
 
 
 

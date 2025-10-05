@@ -1,15 +1,13 @@
 import mongoose from "mongoose";
 
-const STATUS_ENUM = ["pending", "processing", "completed", "cancelled"];
-
 const orderSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, lowercase: true, trim: true },
     phone: { type: String, required: true, trim: true },
 
-    productName: { type: String, required: true, trim: true }, // Change from ObjectId to String
-    productBrand: { type: String, trim: true }, // Store brand separately
+    productName: { type: String, required: true, trim: true },
+    productBrand: { type: String, trim: true },
     selectedSize: { type: String, trim: true },
     selectedColour: { type: String, trim: true },
     
@@ -17,16 +15,26 @@ const orderSchema = new mongoose.Schema(
     address: { type: String, required: true, trim: true },
     comments: { type: String, trim: true },
 
-    // Current status
-    status: { type: String, enum: STATUS_ENUM, default: "pending" },
+    // Dynamic status - can be any string
+    status: { 
+      type: String, 
+      required: true,
+      default: "pending",
+      trim: true
+    },
 
     // Full history of status changes
     history: [
       {
-        status: { type: String, enum: STATUS_ENUM },
+        status: { 
+          type: String, 
+          required: true,
+          trim: true 
+        },
         changedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" },
         changedByEmail: { type: String },
         changedAt: { type: Date, default: Date.now },
+        notes: { type: String, trim: true }
       },
     ],
   },
@@ -36,3 +44,5 @@ const orderSchema = new mongoose.Schema(
 const Order = mongoose.model("Order", orderSchema);
 
 export default Order;
+
+
